@@ -5,7 +5,7 @@ $(error VERSION needs to be set, e.g. make VERSION=2.11.1 build)
 endif
 
 DOCKER_ARCH := $(shell docker info | perl -ne'print "$$1\n" if /Architecture:\s*(\w+)/')
-BRANCH?=${VERSION}
+BRANCH?=${VERSION}rc
 REPO=ncbi/sra-tools
 TAG=${DOCKER_ARCH}-${VERSION}
 
