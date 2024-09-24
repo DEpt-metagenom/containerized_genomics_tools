@@ -1,5 +1,0 @@
-BootStrap: docker
-From: deptmetagenom/fastp:0.23.4
-
-%runscript
-    exec /app/fastp "$@"
