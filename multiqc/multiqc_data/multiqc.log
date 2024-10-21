@@ -1,0 +1,7 @@
+[2024-10-16 16:33:54,317] multiqc.core.file_search                           [INFO   ]  Search path: /home/asyed/new_folder_name/multiqc/test/in
+[2024-10-16 16:33:57,264] multiqc.modules.qualimap.qualimap                  [INFO   ]  Found 12 BamQC reports
+[2024-10-16 16:33:57,332] multiqc.modules.snpeff.snpeff                      [INFO   ]  Found 6 reports
+[2024-10-16 16:33:57,398] multiqc.modules.gatk.varianteval                   [INFO   ]  Found 6 VariantEval reports
+[2024-10-16 16:33:57,454] multiqc.modules.picard.picard                      [INFO   ]  Found 6 MarkDuplicates reports
+[2024-10-16 16:33:57,458] multiqc.modules.fastq_screen.fastq_screen          [INFO   ]  Found 12 reports
+[2024-10-16 16:33:57,505] multiqc.modules.fastqc.fastqc                      [INFO   ]  Found 12 reports
