@@ -1,0 +1,4 @@
+Sample	SnpEff	FastQ Screen	FastQC
+FastQ Screen		0.5.1	
+FastQC			0.11.2
+SnpEff	4.1a		
