@@ -1,0 +1,6 @@
+- "left reads":
+  - "/usr/share/spades/test_dataset/ecoli_1K_1.fq.gz"
+  "orientation": "fr"
+  "right reads":
+  - "/usr/share/spades/test_dataset/ecoli_1K_2.fq.gz"
+  "type": "paired-end"
