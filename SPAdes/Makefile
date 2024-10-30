@@ -6,7 +6,7 @@ DOCKER_IMAGE = $(DOCKER_USER)/$(TOOL):$(VERSION)
 DOCKER_LATEST = $(DOCKER_USER)/$(TOOL):latest
 SIF_FILE = $(TOOL)_$(VERSION).sif
 APPTAINER_DEF = Apptainer.def
-TESTFILES ?= R1 R2  # List of test files without extensions (default: "R1 R2")
+REFERENCE_OUTPUT = reference/scaffolds.fasta  # Path to the reference output file
 
 .PHONY: pull build push build_apptainer test
 
@@ -30,19 +30,18 @@ push: build
 
 # Build the Apptainer image
 build_apptainer: push
-	@echo "Building Apptainer image from Docker image..."
-	apptainer pull $(SIF_FILE) docker://$(DOCKER_IMAGE)
+	apptainer build $(SIF_FILE) $(APPTAINER_DEF)
 
-# Test the Docker container with multiple test files
+# Run test using SPAdes tool and compare output
 test:
-	mkdir test/output
-	chmod a+w test/output
-
-	@echo "Running SPAdes tests with $(TOOL) version $(VERSION)..."
-	# Run SPAdes for each test file
-	docker run --rm -v $(PWD)/data:/data -v $(PWD)/output:/output $(DOCKER_IMAGE) \
-		-c /data/$(TESTFILES)_1.fastq -p /data/$(TESTFILES)_2.fastq -o /output/
-	# Compare output to reference output
-	@echo "Comparing generated output with reference output..."
-	diff -r output/ $(REFERENCE_OUTPUT) || (echo "Test failed: Outputs do not match." && exit 1)
-	@echo "Test passed: Outputs match the reference."
+	@echo "Running SPAdes test with $(TOOL) version $(VERSION)..."
+	# Ensure output directory exists
+	mkdir -p output/
+	# Run SPAdes on the specified test files
+	docker run --rm -v $(PWD)/test/input:/input -v $(PWD)/output:/output $(DOCKER_IMAGE) \
+		-c /input/ecoli_1K_1.fq.gz -p /input/ecoli_1K_2.fq.gz -o /output/
+	# Compare output scaffold file to reference scaffold file
+	@echo "Comparing generated scaffold file with reference output..."
+	diff output/scaffolds.fasta $(REFERENCE_OUTPUT) \
+		&& echo "Test passed: Outputs are identical." \
+		|| (echo "Test failed: Outputs do not match." && exit 1)
