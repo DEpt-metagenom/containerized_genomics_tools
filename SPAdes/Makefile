@@ -30,6 +30,7 @@ push: build
 
 # Build the Apptainer image
 build_apptainer: push
+	@echo "Building Apptainer image from Docker image..."
 	apptainer build $(SIF_FILE) $(APPTAINER_DEF)
 
 # Run test using SPAdes tool and compare output
