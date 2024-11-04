@@ -4,6 +4,7 @@ FROM ubuntu:jammy AS app
 # to make it easier to upgrade for new versions; ARG variables only persist during docker image build time
 ARG SPADES_VER="4.0.0"
 
+#The docker image could not be created with Alpine image, hence the ubuntu image is kept from STaPH-B Dockerfile
 LABEL base.image="ubuntu:jammy"
 LABEL dockerfile.version="1"
 LABEL software="SPAdes"
