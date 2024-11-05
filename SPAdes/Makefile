@@ -17,7 +17,7 @@ pull:
 # Build the Docker image using a specified version
 build:
         @echo "Building Docker image for $(TOOL) version $(VERSION)..."
-        docker build --build-arg FP_VERSION=$(VERSION) -t $(TOOL):$(VERSION) -f ./Dockerfile .
+        docker build --build-arg SPADES_VER=$(VERSION) -t $(TOOL):$(VERSION) -f ./Dockerfile .
 
 # Push the image to Docker Hub
 push: build
