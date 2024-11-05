@@ -1,7 +1,7 @@
 # Variables
 VERSION ?= 4.0.0
 TOOL ?= spades
-DOCKER_USER ?= kovcsboti
+DOCKER_USER ?= deptmetagenom
 DOCKER_IMAGE = $(DOCKER_USER)/$(TOOL):$(VERSION)
 DOCKER_LATEST = $(DOCKER_USER)/$(TOOL):latest
 SIF_FILE = $(TOOL)_$(VERSION).sif
@@ -43,6 +43,6 @@ test:
                 -c /input/ecoli_1K_1.fq.gz -p /input/ecoli_1K_2.fq.gz -o /output/
         # Compare output scaffold file to reference scaffold file
         @echo "Comparing generated scaffold file with reference output..."
-        diff output/scaffolds.fasta $(REFERENCE_OUTPUT) \
+        diff output/scaffolds.fasta reference/scaffolds.fasta \
                 && echo "Test passed: Outputs are identical." \
                 || (echo "Test failed: Outputs do not match." && exit 1)
