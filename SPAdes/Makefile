@@ -5,7 +5,6 @@ DOCKER_USER ?= deptmetagenom
 DOCKER_IMAGE = $(DOCKER_USER)/$(TOOL):$(VERSION)
 DOCKER_LATEST = $(DOCKER_USER)/$(TOOL):latest
 SIF_FILE = $(TOOL)_$(VERSION).sif
-APPTAINER_DEF = Apptainer.def
 REFERENCE_OUTPUT = reference/scaffolds.fasta  # Path to the reference output file
 
 .PHONY: pull build push build_apptainer test
@@ -31,7 +30,7 @@ push: build
 # Build the Apptainer image
 build_apptainer: push
         @echo "Building Apptainer image from Docker image..."
-        apptainer build $(SIF_FILE) $(APPTAINER_DEF)
+        apptainer pull $(SIF_FILE) docker://$(DOCKER_IMAGE)
 
 # Run test using SPAdes tool and compare output
 test:
