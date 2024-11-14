@@ -47,5 +47,5 @@ This command will use files in `test/in` to create a `multiqc_data` directory an
 You don't need special permissions to run **MultiQC** from **Apptainer**. Here’s how to run it if you already mounted `/data` and `/output` directories:
 
 ```bash
-apptainer run multiqc_1.25.1.sif /data -o /output
+apptainer run multiqc_1.25.1.sif multiqc /data -o /output
 ```
