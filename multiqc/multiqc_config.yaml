@@ -1,33 +1,23 @@
-# General MultiQC configuration
-report:
-  title: "MultiQC Report"
-  metadata:
-    date: "{{ date }}"  # Dynamic date placeholder for the date
+fn_ignore_files:
+    - '*.indel.annotated.vcf.gz.snpEff.summary.csv'
 
-# Clean unnecessary parts from filenames (such as sequencing lane and read numbers)
+
 extra_fn_clean_exts:
-  - ".fastq.gz"
-  - ".clean"
-  - ".AHJHNYCCXX"
+    - ".clean"
+    - ".AHJHNYCCXX"
+    - pattern: _S\d_L00\d
+      type: regex
 
-# Clean unnecessary parts from sample names
-# Removes lane, read numbers, and extra suffixes (e.g., S1_L002_R1_001, S6_L007_R1)
 extra_fn_clean_trim:
-  - "_S\\d+_L\\d+_R\\d+_\\d+"  # Removes sequencing lane and read numbers (e.g., S1_L002_R1_001)
-  - "_001"  # Removes redundancy (if "_001" appears in filenames)
+    - "_001"
 
-# Rename the sample names to retain only the main identifier (e.g., P4107_1001)
-sample_names:
-  rename:
-    pattern: '^(P4107_\\d+).*'  # Match the main identifier (e.g., P4107_1001)
-    replacement: '\\1'          # Keep only the main identifier (e.g., P4107_1001)
 
-# Explicitly group samples by their main identifier (e.g., P4107_1001, P4107_1002)
-extra_sample_groups:
-  'P4107_\\d+':
-    - 'P4107_\\d+'  # This will group all samples under their main identifier, e.g., P4107_1001, P4107_1002, etc.
-
-# Merge tables based on the main sample identifier
+# Search patterns for grouping paired samples in general stats (e.g. FastQ R1/R2)
+# Affects the modules that support it (e.g. fastqc, fastp)
 table_sample_merge:
-  "R1": "_R1"  # Merge files with _R1 in their names
-  "R2": "_R2"  # Merge files with _R2 in their names
+  "R1": "_R1"
+  "R2": "_R2"
+
+table_columns_visible:
+    FastQC:
+        percent_duplicates: False
