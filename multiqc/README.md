@@ -12,7 +12,7 @@ First, pull the Docker container using `make pull`. You need Docker installed an
 The command below runs the tool and displays its command-line parameters:
 
 ```bash
-docker run -rm multiqc/multiqc
+docker run --rm multiqc/multiqc
 ```
 To get the current version of **MultiQC** use following line:
 ```bash
@@ -47,5 +47,18 @@ This command will use files in `test/in` to create a `multiqc_data` directory an
 You don't need special permissions to run **MultiQC** from **Apptainer**. Here’s how to run it if you already mounted `/data` and `/output` directories:
 
 ```bash
-apptainer run multiqc_1.25.1.sif multiqc /data -o /output
+apptainer run multiqc_{VERSION}.sif multiqc /data -o /output
 ```
+
+## Make commands
+
+### `make build_apptainer`
+
+Creates an Apptainer image by converting the Docker image.
+
+### `make run_apptainer ARGS="{your input}"`
+Runs an Apptainer image. As it is being invoked, `apptainer run multiqc_latest.sif multiqc` command is used. Specify your flags and desired input/output directories as intended inside ARGS = "".
+
+Example use: 
+``` bash
+make run_apptainer ARGS="/data -o /output"```
