@@ -3,10 +3,6 @@ import subprocess
 
 
 def fetch_tags_and_digests(image_name):
-    """
-    Fetch Docker image tags and their digests from Docker Hub, ignoring specific tags.
-    """
-    # API URL for fetching tags
     url = f"https://hub.docker.com/v2/repositories/{image_name}/tags/?page_size=10"  # Fetch up to 10 tags
     try:
         response = requests.get(url)
@@ -53,9 +49,6 @@ def fetch_tags_and_digests(image_name):
 
 
 def fetch_digest_for_tag(image_name, tag):
-    """
-    Fetch the digest for a specific tag from Docker Hub.
-    """
     try:
         url = f"https://hub.docker.com/v2/repositories/{image_name}/tags/{tag}/"
         response = requests.get(url)
@@ -76,9 +69,6 @@ def fetch_digest_for_tag(image_name, tag):
 
 
 def get_installed_image_digest(image_name):
-    """
-    Get the digest of the installed Docker image.
-    """
     try:
         result = subprocess.run(
             ['docker', 'inspect', '--format', '{{index .RepoDigests 0}}', image_name],
@@ -101,14 +91,11 @@ def get_installed_image_digest(image_name):
 
 
 def compare_tags(tag1, tag2):
-    """
-    Compare two Docker tags and their digests.
-    """
     print(f"Latest tag: {tag1['tag']} (Digest: {tag1['digest']})")
     print(f"Second latest tag: {tag2['tag']} (Digest: {tag2['digest']})")
 
     if tag1["digest"] == tag2["digest"]:
-        print("The latest two tags have the same digest.")
+        print("The latest two tags are the same version")
     else:
         print("The latest two tags have different digests.")
 
@@ -128,6 +115,6 @@ if __name__ == "__main__":
         if installed_digest:
             print(f"Installed Digest: {installed_digest}")
             if installed_digest == latest["digest"]:
-                print("Installed image matches the latest tag from the registry.")
+                print("Installed image matches the latest version from the registry.")
             else:
                 print(f"Version {second_latest} of MultiQC is now awailable! Use 'make pull' to pull the latest docker image")
