@@ -61,4 +61,5 @@ Runs an Apptainer image. As it is being invoked, `apptainer run multiqc_latest.s
 
 Example use: 
 ``` bash
-make run_apptainer ARGS="/data -o /output"```
+make run_apptainer ARGS='-c multiqc_config.yaml'
+```
