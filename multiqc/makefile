@@ -9,7 +9,7 @@ APPTAINER_IMAGE := multiqc_$(VERSION).sif
 
 # Default paths for input/output
 INPUT_DIR := whole_genom_seq/data
-OUTPUT_DIR := test/output/multiqc_data
+OUTPUT_DIR := test/output/
 REF_DIR := whole_genom_seq/ref/multiqc_report/multiqc_data
 
 # List of files to compare in the test
