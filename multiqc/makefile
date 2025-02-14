@@ -32,7 +32,7 @@ run:
 	docker run -it --rm \
 		-v $(PWD)/$(INPUT_DIR):/data \
 		-v $(PWD)/$(OUTPUT_DIR):/output \
-		$(DOCKER_IMAGE) /data -o /output
+		$(DOCKER_IMAGE) multiqc $(ARGS) /data -o /output
 
 # Build Apptainer image from Docker
 build_apptainer:
@@ -44,8 +44,29 @@ run_apptainer:
 	apptainer run $(APPTAINER_IMAGE) multiqc $(ARGS) $(INPUT_DIR) -o $(OUTPUT_DIR)
 
 # Test the Docker and Apptainer outputs
+.PHONY: test
+
 test: 
 	@echo "Running MultiQC tests..."
+	make run
+	@set -e; \
+	for file in $(FILES); do \
+		echo "Comparing $(OUTPUT_DIR)/$$file with $(REF_DIR)/$$file..."; \
+		python test.py $(OUTPUT_DIR)/multiqc_data/$$file $(REF_DIR)/$$file || (echo "Error: $(OUTPUT_DIR)/multiqc_data/$$file differs from $(REF_DIR)/$$file" && exit 1); \
+	done ;
+
+	@echo "Cleaning up test files..."
+	rm -rf $(OUTPUT_DIR)/*
+
+	@echo "Docker tests passed!"
+
+
+
+	@echo "Running MultiQC tests in Docker..."
+	make run 
+
+
+	@echo "Running MultiQC tests in Apptainer..."
 	# Run tests for each file and compare using Python script
 	make run_apptainer ARGS='-c multiqc_config.yaml'
 	@set -e; \
@@ -53,4 +74,9 @@ test:
 		echo "Comparing $(OUTPUT_DIR)/$$file with $(REF_DIR)/$$file..."; \
 		python test.py $(OUTPUT_DIR)/multiqc_data/$$file $(REF_DIR)/$$file || (echo "Error: $(OUTPUT_DIR)/multiqc_data/$$file differs from $(REF_DIR)/$$file" && exit 1); \
 	done ;
+	@echo "Apptainer tests passed!"
+
+	@echo "Cleaning up test files..."
+	rm -rf $(OUTPUT_DIR)/*
+
 	@echo "All tests passed!"
