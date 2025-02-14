@@ -9,7 +9,7 @@ APPTAINER_IMAGE := multiqc_$(VERSION).sif
 
 # Default paths for input/output
 INPUT_DIR := whole_genom_seq/data
-OUTPUT_DIR := test/output/
+OUTPUT_DIR := test/output
 REF_DIR := whole_genom_seq/ref/multiqc_report/multiqc_data
 
 # List of files to compare in the test
@@ -51,6 +51,6 @@ test:
 	@set -e; \
 	for file in $(FILES); do \
 		echo "Comparing $(OUTPUT_DIR)/$$file with $(REF_DIR)/$$file..."; \
-		python test.py $(OUTPUT_DIR)/$$file $(REF_DIR)/$$file || (echo "Error: $(OUTPUT_DIR)/$$file differs from $(REF_DIR)/$$file" && exit 1); \
+		python test.py $(OUTPUT_DIR)/multiqc_data/$$file $(REF_DIR)/$$file || (echo "Error: $(OUTPUT_DIR)/multiqc_data/$$file differs from $(REF_DIR)/$$file" && exit 1); \
 	done ;
 	@echo "All tests passed!"
