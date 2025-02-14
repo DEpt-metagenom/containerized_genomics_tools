@@ -63,3 +63,11 @@ Example use:
 ``` bash
 make run_apptainer ARGS='-c multiqc_config.yaml'
 ```
+### `make test`
+Creates an output and then runs tests, comparing generated reports and reference reports from official website.
+
+In case `make test` gives you an output in console like following:
+```
+make: 'test' is up to date.
+```
+please, use `make -B test`.
