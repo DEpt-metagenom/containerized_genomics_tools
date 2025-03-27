@@ -8,9 +8,9 @@ DOCKER_IMAGE := multiqc/multiqc:latest
 APPTAINER_IMAGE := multiqc_$(VERSION).sif
 
 # Default paths for input/output
-INPUT_DIR := whole_genom_seq/data
-OUTPUT_DIR := test/output
-REF_DIR := whole_genom_seq/ref/multiqc_report/multiqc_data
+INPUT_DIR := test/in/data
+OUTPUT_DIR := test/out
+REF_DIR := test/outmultiqc
 
 # List of files to compare in the test
 FILES := fastq_screen_plot.txt fastqc_adapter_content_plot.txt fastqc_overrepresented_sequences_plot.txt fastqc_per_base_n_content_plot.txt \
@@ -30,9 +30,9 @@ pull:
 # Run MultiQC in Docker
 run:
 	docker run -it --rm \
-		-v $(PWD)/$(INPUT_DIR):/data \
-		-v $(PWD)/$(OUTPUT_DIR):/output \
-		$(DOCKER_IMAGE) multiqc $(ARGS) /data -o /output
+		-v "$(PWD)/$(INPUT_DIR)":/data \
+		-v "$(PWD)/$(OUTPUT_DIR)":/output \
+		$(DOCKER_IMAGE) multiqc -c config.yaml /data -o /output
 
 # Build Apptainer image from Docker
 build_apptainer:
@@ -44,39 +44,39 @@ run_apptainer:
 	apptainer run $(APPTAINER_IMAGE) multiqc $(ARGS) $(INPUT_DIR) -o $(OUTPUT_DIR)
 
 # Test the Docker and Apptainer outputs
-.PHONY: test
+.PHONY: test clean
+
+SCRIPT = test.py
+
+FILES_1 = $(wildcard $(OUTPUT_DIR)/multiqc_data/*.txt)
+FILES_2 = $(wildcard $(REF_DIR)/multiqc_data/*.txt)
 
 test: 
-	@echo "Running MultiQC tests..."
-	make run
-	@set -e; \
-	for file in $(FILES); do \
-		echo "Comparing $(OUTPUT_DIR)/$$file with $(REF_DIR)/$$file..."; \
-		python test.py $(OUTPUT_DIR)/multiqc_data/$$file $(REF_DIR)/$$file || (echo "Error: $(OUTPUT_DIR)/multiqc_data/$$file differs from $(REF_DIR)/$$file" && exit 1); \
-	done ;
-
-	@echo "Cleaning up test files..."
-	rm -rf $(OUTPUT_DIR)/*
-
-	@echo "Docker tests passed!"
-
-
-
-	@echo "Running MultiQC tests in Docker..."
-	make run 
-
-
 	@echo "Running MultiQC tests in Apptainer..."
-	# Run tests for each file and compare using Python script
-	make run_apptainer ARGS='-c multiqc_config.yaml'
-	@set -e; \
-	for file in $(FILES); do \
-		echo "Comparing $(OUTPUT_DIR)/$$file with $(REF_DIR)/$$file..."; \
-		python test.py $(OUTPUT_DIR)/multiqc_data/$$file $(REF_DIR)/$$file || (echo "Error: $(OUTPUT_DIR)/multiqc_data/$$file differs from $(REF_DIR)/$$file" && exit 1); \
-	done ;
-	@echo "Apptainer tests passed!"
+	multiqc -c config.yaml $(INPUT_DIR) -o $(REF_DIR)
+	make run_apptainer ARGS="-c config.yaml"
 
-	@echo "Cleaning up test files..."
-	rm -rf $(OUTPUT_DIR)/*
+	$(FILES_1)
+	@echo "Comparing matching files in $(OUTPUT_DIR)/multiqc_data and $(REF_DIR)/multiqc_data..."
+	@all_success=true; \
+	for file1 in $(FILES_1); do \
+		file2=$(REF_DIR)/multiqc_data/$(notdir $$file1); \
+		if [ -f $$file2 ]; then \
+			echo "Comparing $$file1 and $$file2..."; \
+			if python3 $(SCRIPT) $$file1 $$file2; then \
+				echo "Successfully compared $$file1 and $$file2"; \
+			else \
+				echo "Test failed for $$file1 and $$file2"; \
+				all_success=false; \
+			fi; \
+		fi; \
+	done; \
+	if [ $$all_success = true ]; then \
+		echo "All tests were successful!"; \
+	else \
+		echo "Some comparisons failed."; \
+	fi
 
-	@echo "All tests passed!"
+clean:
+	@echo "Cleaning temporary files..."
+	rm -rf $(OUTPUT_DIR) $(REF_DIR)
