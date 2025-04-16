@@ -8,9 +8,9 @@ DOCKER_IMAGE := multiqc/multiqc:$(VERSION)
 APPTAINER_IMAGE := multiqc_$(VERSION).sif
 
 # Default paths for input/output
-INPUT_DIR := whole_genom_seq/data
-OUTPUT_DIR := test/output/multiqc_data
-REF_DIR := whole_genom_seq/ref/multiqc_data
+INPUT_DIR := test/in/data
+OUTPUT_DIR := test/output
+REF_DIR := test/ref
 SCRIPT = test.py
 FILES_1 = $(wildcard $(OUTPUT_DIR)/multiqc_data/*.txt)
 FILES_2 = $(wildcard $(REF_DIR)/multiqc_data/*.txt)
@@ -35,7 +35,7 @@ build_apptainer:
 # Run MultiQC using Apptainer
 run_apptainer:
 	@python3 docker_tag.py
-	apptainer run $(APPTAINER_IMAGE) multiqc $(ARGS)
+	apptainer run $(APPTAINER_IMAGE) multiqc $(ARGS) $(INPUT_DIR) -o $(OUTPUT_DIR)
 
 # Test the Docker and Apptainer outputs
 test: 
