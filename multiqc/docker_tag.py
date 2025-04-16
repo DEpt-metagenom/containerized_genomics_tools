@@ -1,54 +1,9 @@
 import requests
 import subprocess
+from datetime import datetime
 
 
-def fetch_tags_and_digests(image_name):
-    url = f"https://hub.docker.com/v2/repositories/{image_name}/tags/?page_size=10"  # Fetch up to 10 tags
-    try:
-        response = requests.get(url)
-        if response.status_code != 200:
-            print(f"Failed to fetch tags. Status code: {response.status_code}")
-            return None
-
-        data = response.json()
-        tags = data.get("results", [])
-
-        # Filter out 'dev' tags and sort by last updated date
-        filtered_tags = [
-            tag for tag in tags if tag["name"] != "dev"
-        ]
-        if len(filtered_tags) < 2:
-            print("Not enough valid tags to compare.")
-            return None
-
-        # Sort by `last_updated` to ensure proper ordering
-        filtered_tags.sort(key=lambda t: t["last_updated"], reverse=True)
-
-        # Extract the latest two tags and their digests
-        latest_tag = filtered_tags[0]
-        second_latest_tag = filtered_tags[1]
-
-        # Fetch the digest for both tags
-        latest_digest = fetch_digest_for_tag(image_name, latest_tag["name"])
-        second_latest_digest = fetch_digest_for_tag(image_name, second_latest_tag["name"])
-
-        latest_info = {
-            "tag": latest_tag["name"],
-            "digest": latest_digest,
-        }
-        second_latest_info = {
-            "tag": second_latest_tag["name"],
-            "digest": second_latest_digest,
-        }
-
-        return latest_info, second_latest_info
-
-    except Exception as e:
-        print(f"Error occurred: {e}")
-        return None
-
-
-def fetch_digest_for_tag(image_name, tag):
+def fetch_tag_digest(image_name, tag):
     try:
         url = f"https://hub.docker.com/v2/repositories/{image_name}/tags/{tag}/"
         response = requests.get(url)
@@ -57,64 +12,135 @@ def fetch_digest_for_tag(image_name, tag):
             return None
 
         data = response.json()
-
-        if 'digest' in data:
-            return data['digest']
-        else:
-            print(f"No digest found for tag {tag}")
-            return "No digest available"
+        # Get the amd64/linux digest
+        for image in data.get("images", []):
+            if image.get("architecture") == "amd64" and image.get("os") == "linux":
+                return image.get("digest")
+        return None
     except Exception as e:
-        print(f"Error occurred while fetching digest for tag {tag}: {e}")
-        return "Error fetching digest"
+        print(f"Error fetching digest for tag {tag}: {e}")
+        return None
 
 
-def get_installed_image_digest(image_name):
+def fetch_version_tags(image_name):
+    url = f"https://hub.docker.com/v2/repositories/{image_name}/tags/?page_size=100"
+    try:
+        response = requests.get(url)
+        if response.status_code != 200:
+            print(f"Failed to fetch tags. Status code: {response.status_code}")
+            return None
+
+        tags = response.json().get("results", [])
+
+        version_tags = [tag for tag in tags if tag["name"].startswith("v") and tag["name"].count(".") >= 1]
+
+        version_tags.sort(key=lambda t: t["last_updated"], reverse=True)
+        return version_tags
+    except Exception as e:
+        print(f"Error fetching tags: {e}")
+        return None
+
+
+def get_installed_version(image_name):
     try:
         result = subprocess.run(
-            ['docker', 'inspect', '--format', '{{index .RepoDigests 0}}', image_name],
+            ['docker', 'images', '--format', '{{.Tag}}', image_name],
+            capture_output=True,
+            text=True
+        )
+        if result.returncode != 0:
+            print(f"Failed to get installed tags: {result.stderr}")
+            return None, None
+
+        installed_tags = [t for t in result.stdout.strip().split('\n') if t]
+        if not installed_tags:
+            print("No local image found")
+            return None, None
+
+        # Find the first version tag 
+        version_tag = next((t for t in installed_tags if t.startswith("v") and t.count(".") >= 1), installed_tags[0])
+        
+        # Get the digest
+        result = subprocess.run(
+            ['docker', 'inspect', '--format', '{{index .RepoDigests 0}}', f"{image_name}:{version_tag}"],
             capture_output=True,
             text=True
         )
         if result.returncode == 0:
-            installed_digest = result.stdout.strip()
-            if installed_digest:
-                return installed_digest.split('@')[1]  # Extract just the digest after '@'
-            else:
-                print(f"Error: No digest found for the image '{image_name}'.")
-                return None
-        else:
-            print(f"Failed to fetch installed digest. Error: {result.stderr}")
-            return None
+            output = result.stdout.strip()
+            if '@' in output:
+                return version_tag, output.split('@')[1]
+        
+        print(f"Failed to get installed digest: {result.stderr}")
+        return version_tag, None
+
     except Exception as e:
         print(f"Error occurred: {e}")
+        return None, None
+
+
+def find_version_by_digest(image_name, digest, version_tags):
+    if not digest or not version_tags:
         return None
+    
+    for tag in version_tags:
+        tag_digest = fetch_tag_digest(image_name, tag["name"])
+        if tag_digest == digest:
+            return tag["name"]
+    return None
 
 
-def compare_tags(tag1, tag2):
-    print(f"Latest tag: {tag1['tag']} (Digest: {tag1['digest']})")
-    print(f"Second latest tag: {tag2['tag']} (Digest: {tag2['digest']})")
+def check_image_version(image_name):
+    print(f"\n🔍 Checking image: {image_name}")
 
-    if tag1["digest"] == tag2["digest"]:
-        print("The latest two tags are the same version")
+    installed_version, installed_digest = get_installed_version(image_name)
+    if not installed_version:
+        print("Could not determine installed version")
+        return
+
+    print(f"💻 Installed version: {installed_version}")
+    if installed_digest:
+        print(f"   Digest: {installed_digest}")
+
+    version_tags = fetch_version_tags(image_name)
+    if not version_tags:
+        return
+
+    registry_digest_for_installed = fetch_tag_digest(image_name, installed_version)
+    
+    latest_version_info = version_tags[0]
+    latest_version = latest_version_info["name"]
+    latest_digest = fetch_tag_digest(image_name, latest_version)
+
+    print(f"\n📦 Latest version in registry: {latest_version}")
+    print(f"   Updated: {latest_version_info['last_updated']}")
+    if latest_digest:
+        print(f"   Digest: {latest_digest}")
+
+    if installed_digest and registry_digest_for_installed:
+        if installed_digest == registry_digest_for_installed:
+            print("\n✅ Your installed version matches the registry version")
+        else:
+            print("\n⚠️  Your installed version has a different digest than the registry version")
+
+    if installed_version == latest_version:
+        print("\n🎉 You're running the latest version!")
     else:
-        print("The latest two tags have different digests.")
+        print(f"\n⚠️  Newer version available: {latest_version}")
+
+    latest_tag_digest = fetch_tag_digest(image_name, "latest")
+    if latest_tag_digest:
+        version_tagged_latest = find_version_by_digest(image_name, latest_tag_digest, version_tags)
+        if version_tagged_latest:
+            print(f"\nℹ️  The 'latest' tag currently points to version: {version_tagged_latest}")
+            if version_tagged_latest == installed_version:
+                print("   (This matches your installed version)")
+            elif version_tagged_latest == latest_version:
+                print("   (This matches the newest version)")
+            else:
+                print("   (This is neither your version nor the newest)")
 
 
 if __name__ == "__main__":
     image_name = "multiqc/multiqc" 
-
-    tags = fetch_tags_and_digests(image_name)
-    
-    installed_digest = get_installed_image_digest(image_name)
-
-    if tags:
-        latest, second_latest = tags
-        compare_tags(latest, second_latest)
-
-        # Compare the latest tag digest from Docker Hub with the installed image digest
-        if installed_digest:
-            print(f"Installed Digest: {installed_digest}")
-            if installed_digest == latest["digest"]:
-                print("Installed image matches the latest version from the registry.")
-            else:
-                print(f"Version {second_latest} of MultiQC is now awailable! Use 'make pull' to pull the latest docker image")
+    check_image_version(image_name)
