@@ -1,6 +1,5 @@
 import requests
 import subprocess
-from datetime import datetime
 
 
 def fetch_tag_digest(image_name, tag):
@@ -12,7 +11,6 @@ def fetch_tag_digest(image_name, tag):
             return None
 
         data = response.json()
-        # Get the amd64/linux digest
         for image in data.get("images", []):
             if image.get("architecture") == "amd64" and image.get("os") == "linux":
                 return image.get("digest")
@@ -31,9 +29,7 @@ def fetch_version_tags(image_name):
             return None
 
         tags = response.json().get("results", [])
-
         version_tags = [tag for tag in tags if tag["name"].startswith("v") and tag["name"].count(".") >= 1]
-
         version_tags.sort(key=lambda t: t["last_updated"], reverse=True)
         return version_tags
     except Exception as e:
@@ -57,10 +53,8 @@ def get_installed_version(image_name):
             print("No local image found")
             return None, None
 
-        # Find the first version tag 
         version_tag = next((t for t in installed_tags if t.startswith("v") and t.count(".") >= 1), installed_tags[0])
         
-        # Get the digest
         result = subprocess.run(
             ['docker', 'inspect', '--format', '{{index .RepoDigests 0}}', f"{image_name}:{version_tag}"],
             capture_output=True,
@@ -79,17 +73,6 @@ def get_installed_version(image_name):
         return None, None
 
 
-def find_version_by_digest(image_name, digest, version_tags):
-    if not digest or not version_tags:
-        return None
-    
-    for tag in version_tags:
-        tag_digest = fetch_tag_digest(image_name, tag["name"])
-        if tag_digest == digest:
-            return tag["name"]
-    return None
-
-
 def check_image_version(image_name):
     print(f"\n🔍 Checking image: {image_name}")
 
@@ -106,8 +89,6 @@ def check_image_version(image_name):
     if not version_tags:
         return
 
-    registry_digest_for_installed = fetch_tag_digest(image_name, installed_version)
-    
     latest_version_info = version_tags[0]
     latest_version = latest_version_info["name"]
     latest_digest = fetch_tag_digest(image_name, latest_version)
@@ -117,8 +98,8 @@ def check_image_version(image_name):
     if latest_digest:
         print(f"   Digest: {latest_digest}")
 
-    if installed_digest and registry_digest_for_installed:
-        if installed_digest == registry_digest_for_installed:
+    if installed_digest and latest_digest:
+        if installed_digest == latest_digest:
             print("\n✅ Your installed version matches the registry version")
         else:
             print("\n⚠️  Your installed version has a different digest than the registry version")
@@ -127,19 +108,7 @@ def check_image_version(image_name):
         print("\n🎉 You're running the latest version!")
     else:
         print(f"\n⚠️  Newer version available: {latest_version}")
-
-    latest_tag_digest = fetch_tag_digest(image_name, "latest")
-    if latest_tag_digest:
-        version_tagged_latest = find_version_by_digest(image_name, latest_tag_digest, version_tags)
-        if version_tagged_latest:
-            print(f"\nℹ️  The 'latest' tag currently points to version: {version_tagged_latest}")
-            if version_tagged_latest == installed_version:
-                print("   (This matches your installed version)")
-            elif version_tagged_latest == latest_version:
-                print("   (This matches the newest version)")
-            else:
-                print("   (This is neither your version nor the newest)")
-
+        print(f"📥 Pull the newer version! Use 'make pull VERSION={latest_version}'")
 
 if __name__ == "__main__":
     image_name = "multiqc/multiqc" 
