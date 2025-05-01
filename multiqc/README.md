@@ -52,22 +52,45 @@ apptainer run multiqc_{VERSION}.sif multiqc /data -o /output
 
 ## Make commands
 
+### `make pull`
+Pulls docker image of MultiQC of specified version from their official DockerHub. If you want to pull the image of different version, use `make pull VERSION=[your desired version]`.
+
+### `make run`
+Runs docker image of MultiQC.
+
 ### `make build_apptainer`
 
 Creates an Apptainer image by converting the Docker image.
 
 ### `make run_apptainer ARGS="{your input}"`
-Runs an Apptainer image. As it is being invoked, `apptainer run multiqc_latest.sif multiqc` command is used. Specify your flags and desired input/output directories as intended inside ARGS = "".
+Runs an Apptainer image. As it is being invoked, `apptainer run multiqc_$(VERSION).sif multiqc $(INPUT_DIRECTORY) -o $(OUTPUT_DIRECTORY)` command is used. Specify your flags inside ARGS = "".
 
 Example use: 
 ``` bash
 make run_apptainer ARGS='-c multiqc_config.yaml'
 ```
-### `make test`
-Creates an output and then runs tests, comparing generated reports and reference reports from official website.
 
-In case `make test` gives you an output in console like following:
+### `make generate_test_ref`
+This command installs MultiQC tool and generates a reference report in test/ref_$(REF_VERSION) directory. Generate the reference report every time it is needed. You can specify which version report you need by using `REF_VERSION=[your version]`
+
+Example use:
+``` bash
+make generate_ref_report REF_VERSION=v1.27.1
 ```
-make: 'test' is up to date.
-```
-please, use `make -B test`.
+
+### `make check_docker_version`
+Runs a python script that checks if the version of MultiQC in Makefile is the same as the latest version on MultiQC DockerHub.
+
+### `make test`
+Runs both docker and apptainer tests comparing the generated reports to the **reference report**. To run it successfully, you need to have both docker and apptainer image installed.
+
+### `make test_apptainer`
+Generates a MultiQC report in the test/output folder using apptainer.sif and then compares its contents to the reference report generated earlier.
+
+
+### `make test_docker`
+Generates a MultiQC report in the test/output folder using docker image and then compares its contents to the reference report generated earlier.
+
+
+### `make clean` 
+Removes the contents of test/output folder after testing.
