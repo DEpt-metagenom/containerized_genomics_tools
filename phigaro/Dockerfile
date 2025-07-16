@@ -32,13 +32,12 @@ RUN /app/miniconda/bin/conda env create -f /tmp/environment.yml
 
 # Set environment variables to activate the plasflow environment by default
 SHELL ["/bin/bash", "-c"]
-RUN echo 'source /app/miniconda/bin/activate phigaro_env' >> ~/.bashrc
 
 # Activate the plasflow environment
 ENV CONDA_DEFAULT_ENV=phigaro_env
 ENV PATH=/app/miniconda/envs/phigaro_env/bin:$PATH
 
-RUN source ~/.bashrc
+# The environment is now available for all subsequent RUN/CMD/ENTRYPOINT steps
 
 #RUN phigaro-setup --no-updatedb -f
 
