@@ -6,7 +6,7 @@ RUN TZ=Europe/Budapest \
     && ln -snf "/usr/share/zoneinfo/$TZ" /etc/localtime \
     && echo $TZ > /etc/timezone \
     && conda install -y -c conda-forge mamba \
-    && mamba install -y -c bioconda -c conda-forge ncbi-datasets-cli=18.9.0
+    && mamba install -y -c bioconda -c conda-forge ncbi-datasets-cli=18.9.0 unzip
 
 # Set environment variables
 ENV LC_ALL=C
