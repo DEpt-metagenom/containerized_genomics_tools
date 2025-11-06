@@ -28,7 +28,9 @@ RUN /opt/miniconda/bin/conda init
 
 # Configure conda channels
 RUN /opt/miniconda/bin/conda config --add channels bioconda && \
-    /opt/miniconda/bin/conda config --add channels conda-forge
+    /opt/miniconda/bin/conda config --add channels conda-forge && \
+    /opt/miniconda/bin/conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/main && \
+    /opt/miniconda/bin/conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/r
 
 # Create piler environment to install dependencies and piler-cr
 RUN /opt/miniconda/bin/conda create --name piler python=3.5 -y && \
