@@ -1,0 +1,1 @@
+containerized solution to run the latest version of toxcodan-genome (https://github.com/pedronachtigall/ToxCodAn-Genome)

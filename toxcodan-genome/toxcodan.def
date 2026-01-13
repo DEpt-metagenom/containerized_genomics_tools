@@ -1,0 +1,52 @@
+Bootstrap: docker
+From: condaforge/mambaforge
+
+%labels
+    Author "ToxCodAn-Genome container"
+    Version "1.0"
+    Description "Containerized ToxCodAn-Genome with bundled toxin databases"
+
+%environment
+    # Ensure ToxCodAn-Genome scripts and conda binaries are on PATH
+    export PATH=/opt/ToxCodAn-Genome/bin:/usr/local/bin:/opt/conda/bin:$PATH
+    export TOXCODAN_DB=/Databases
+
+%files
+    . /opt/ToxCodAn-Genome
+
+%post
+    set -e
+
+    # Install all required tools via bioconda/conda-forge into base env
+    mamba install -y -c conda-forge -c bioconda \
+        python=3.10 \
+        biopython \
+        pandas \
+        blast \
+        exonerate \
+        miniprot \
+        gffread \
+        hisat2 \
+        samtools \
+        stringtie \
+        trinity \
+        spades
+
+    apt-get update && \
+    apt-get install -y --no-install-recommends procps && \
+    rm -rf /var/lib/apt/lists/*
+
+    # Make sure main script is executable
+    chmod +x /opt/ToxCodAn-Genome/bin/* || true
+
+    # Put the main entry point on PATH
+    ln -sf /opt/ToxCodAn-Genome/bin/toxcodan-genome.py /usr/local/bin/toxcodan-genome.py
+
+    # Install/to expose toxin databases at /Databases
+    mkdir -p /Databases
+    # Copy the provided databases into /Databases
+    cp -r /opt/ToxCodAn-Genome/Databases/* /Databases/ 2>/dev/null || true
+
+%runscript
+    echo "ToxCodAn-Genome container"
+    echo "Run with: apptainer exec toxcodan.sif toxcodan-genome.py [options]"
