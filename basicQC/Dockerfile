@@ -36,8 +36,11 @@ ENV PATH=/app/miniconda/envs/basicqc/bin:$PATH
 
 RUN pip install scikit-learn numpy pandas
 
-RUN quast --help
-RUN busco --help
+COPY scaler.py /usr/local/bin/scaler.py
+
+RUN chmod +x /usr/local/bin/scaler.py
+
+RUN quast --help && busco --help && scaler.py --help
 
 WORKDIR /data
 
