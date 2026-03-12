@@ -27,8 +27,8 @@ RUN conda tos accept --override-channels --channel https://repo.anaconda.com/pkg
 RUN conda config --add channels bioconda && \
     conda config --add channels conda-forge
 
-# Creating environment for BUSCO and Quast
-RUN conda create -n antiCS python=3.9
+# Creating python environment with minimap2
+RUN conda create -n antiCS python=3.9 minimap2=2.28
 
 SHELL ["/bin/bash", "-c"]
 ENV CONDA_DEFAULT_ENV=antiCS
@@ -40,7 +40,7 @@ COPY antiCS.py /usr/local/bin/antiCS.py
 
 RUN chmod +x /usr/local/bin/antiCS.py
 
-RUN pigz --help && antiCS.py --help
+RUN pigz --help && minimap2 --help && antiCS.py --help
 
 WORKDIR /data
 
