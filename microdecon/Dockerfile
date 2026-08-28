@@ -45,4 +45,6 @@ RUN apt-get update && apt-get install -y \
 RUN R -e 'install.packages(c("devtools", "remotes"), repos="https://cloud.r-project.org")' \
     && R -e 'devtools::install_github("donaldtmcknight/microDecon")'
 
+RUN R -e 'install.packages(c("dplyr","tidyr","foreach"))'
+
 CMD ["R"]
