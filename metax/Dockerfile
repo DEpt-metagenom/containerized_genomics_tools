@@ -18,7 +18,7 @@ RUN micromamba install -y -n base \
     -c conda-forge \
     -c bioconda \
     -c zldeng \
-    metax ma=1.1.4 && \
+    metax==0.9.23 ma=1.1.4 && \
     micromamba clean --all --yes
 
 ENV PATH=/opt/conda/bin:/opt/conda/envs/base/bin:$PATH
