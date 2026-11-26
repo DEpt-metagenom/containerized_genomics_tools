@@ -1,25 +1,20 @@
-FROM mambaorg/micromamba:2.3.2
-
-USER root
+FROM debian:bookworm-slim
 
 ARG MUMMER_VERSION=4.0.1
-
-ENV DEBIAN_FRONTEND=noninteractive
+ARG DEBIAN_FRONTEND="noninteractive"
+ARG TZ="UTC"
+ENV TZ="${TZ}"
 
 # Build dependencies
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         build-essential \
         ca-certificates \
+        python3 \
+        procps \
         curl \
         perl \
     && rm -rf /var/lib/apt/lists/*
-
-# Install Python in the micromamba base environment
-RUN micromamba install -y -n base \
-        -c conda-forge \
-        python=3.12 \
-    && micromamba clean --all --yes
 
 # Build MUMmer 4
 RUN mkdir -p /tmp/mummer /opt/mummer && \
@@ -49,10 +44,5 @@ RUN make -C merger -j"$(nproc)" && \
 
 # Default working directory for input/output files
 WORKDIR /work
-
-# Make sure the micromamba base environment is active
-ENV MAMBA_DOCKERFILE_ACTIVATE=1
-
-USER mambauser
 
 CMD ["/bin/bash"]
